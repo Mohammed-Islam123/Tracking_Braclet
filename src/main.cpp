@@ -6,8 +6,8 @@ SoftwareSerial sfw(D1, D2);
 #define A9G_rstPin D4
 
 const String broker = "test.mosquitto.org";
-const String subTopic;
-const String PublishTopic = "veryUltimateSecretTopic/esp82/loc";
+String subTopic;
+const String PublishTopic = "stuped11";
 
 String sendCommand(String command, short waitTime, bool debug = true);
 void setup()
@@ -25,7 +25,6 @@ void setup()
 
   digitalWrite(A9G_rstPin, LOW);
   digitalWrite(A9G_rstPin, HIGH);
-  delay(1000);
 
   String res = "";
   while (res.indexOf("READY") < 0)
@@ -53,50 +52,42 @@ void setup()
   sendCommand("AT+CSQ", 2000);
   // Connect to Mqtt broker
   sendCommand("AT+MQTTCONN=\"" + broker + "\",1883,\"XXXX\",120,0", 2000);
-  // Send MQTT subscribe packet
-  // sendCommand("AT+MQTTSUB=\"" + subTopic + "\",1,0", 2000);
+
+  // AT+MQTTCONN=” test.mosquitto.org”,1883,”XXXX”,120,0
+  //  Send MQTT subscribe packet
+  //  sendCommand("AT+MQTTSUB=\"" + subTopic + "\",1,0", 2000);
 }
 
 void loop()
 {
+
+  // Get and send GPS Coordinations
   String responce = sendCommand("AT+LOCATION=2", 2000);
-  // put your main code here, to run repeatedly:
-  if (responce.indexOf("NOT FIX") >= 0)
+
+  // // put your main code here, to run repeatedly:
+  if (responce.indexOf("ERROR") >= 0)
   {
-    Serial.println("I can not get GPS");
-    sendCommand("AT+MQTTPUB=\"" + PublishTopic + "\",\"Error Getting GPS\",0,0,0 ", 1000, false);
+    Serial.println("Erro getting GPS");
+    sendCommand("AT+MQTTPUB=\"" + PublishTopic + "\",\"Error Getting GPS\",0,0,0 ", 1000);
   }
   else
   {
-    Serial.println("I can get GPS");
 
-    sendCommand("AT+MQTTPUB=\"" + PublishTopic + "\",\"" + responce + "\",0,0,0 ", 1000, false);
+    sendCommand("AT+MQTTPUB=\"" + PublishTopic + "\",\"" + responce.substring(18, 35) + "\",0,0,0 ", 1000);
   }
-  // while (sfw.available() > 0)
-  // {
 
-  //   Serial.println(sfw.readString());
-  //   yield();
-  // }
-  // while (Serial.available() > 0)
-  // {
-
-  //   sfw.println(Serial.readString());
-  //   yield();
-  // }
   delay(1000);
 }
 
 // function to send a command and return the response
 String sendCommand(String command, short waitTime, bool debug)
 {
-  Serial.println(command);
 
   sfw.println(command);
   delay(waitTime);
   String response = "";
 
-  while (sfw.available() > 0)
+  while ((sfw.available() > 0))
   {
 
     response += (char)sfw.read();
