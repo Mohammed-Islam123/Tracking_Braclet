@@ -6,11 +6,11 @@
 SoftwareSerial sfw(D1, D2);
 // define the MQTT settings
 const String broker = "test.mosquitto.org";
-String subTopic = "stuppubsh";
-const String PublishTopic = "stuped11";
+String subTopic = "zamalSub";
+const String PublishTopic = "zmalaPublish";
 String lang = "", lat = "";
-
-String getPayload(String latitude, String langitude, String battery, String separator = "#//#");
+const String presionerID = "123";
+String getPayload(String presioner_ID, String latitude, String langitude, String battery, String separator = "#//#");
 void getLocation(String responce, String &lat, String &lang);
 String getResponceFromBroker(int timeOut);
 String sendCommand(String command, int timeOut, bool checkForErrors, bool debug = true);
@@ -69,7 +69,7 @@ void loop()
   String location = sendCommand("AT+LOCATION=2", 2000, false, false);
   String battery = sendCommand("AT+CBC?", 1000, true, false).substring(20, 22);
   getLocation(location, lat, lang);
-  sendCommand("AT+MQTTPUB=\"" + PublishTopic + "\",\"" + getPayload(lat, lang, battery) + "\",0,0,0 ", 4000, false);
+  sendCommand("AT+MQTTPUB=\"" + PublishTopic + "\",\"" + getPayload(presionerID, lat, lang, battery) + "\",0,0,0 ", 4000, false);
 
   Serial.println(getResponceFromBroker(6000));
   checkConnection();
@@ -100,9 +100,9 @@ void getLocation(String responce, String &lat, String &lang)
   }
 }
 // this function returns the String that will be sent containing all the infos
-String getPayload(String latitude, String langitude, String battery, String separator)
+String getPayload(String presioner_ID, String latitude, String langitude, String battery, String separator)
 {
-  return latitude + separator + langitude + separator + battery;
+  return presioner_ID + separator + latitude + separator + langitude + separator + battery;
 }
 
 String getResponceFromBroker(int timeOut)
